@@ -1,0 +1,409 @@
+import 'package:flutter/material.dart';
+
+// --- 1. 全局状态管理 ---
+class BankState {
+  static final ValueNotifier<double> balance = ValueNotifier<double>(0.00);
+  static final ValueNotifier<bool> isVisible = ValueNotifier<bool>(true);
+  
+  static void toggle() => isVisible.value = !isVisible.value;
+  static void add(double amt) => balance.value += amt;
+}
+
+void main() => runApp(const LanzhouBankApp());
+
+class LanzhouBankApp extends StatelessWidget {
+  const LanzhouBankApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
+        primaryColor: const Color(0xFFD32F2F),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0.5,
+          centerTitle: true,
+          titleTextStyle: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+      ),
+      home: const MainFrame(),
+    );
+  }
+}
+
+// --- 2. 主导航框架 ---
+class MainFrame extends StatefulWidget {
+  const MainFrame({super.key});
+  @override
+  State<MainFrame> createState() => _MainFrameState();
+}
+
+class _MainFrameState extends State<MainFrame> {
+  int _currentIndex = 0;
+  final List<Widget> _pages = [
+    const HomePage(),
+    const CreditCardPage(),
+    const WealthPage(),
+    const LifePage(),
+    const MinePage(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(index: _currentIndex, children: _pages),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFFD32F2F),
+        unselectedItemColor: const Color(0xFF666666),
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: '首页'),
+          BottomNavigationBarItem(icon: Icon(Icons.credit_card), label: '信用卡'),
+          BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), label: '财富'),
+          BottomNavigationBarItem(icon: Icon(Icons.local_mall_outlined), label: '生活'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: '我的'),
+        ],
+      ),
+    );
+  }
+}
+
+// --- 3. 首页 (图 1000030841) ---
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 180,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0xFFE53935), Color(0xFFD32F2F)]),
+                  ),
+                ),
+                Positioned(
+                  top: 50, left: 15, right: 15,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.qr_code_scanner, color: Colors.white),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Container(
+                          height: 36,
+                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(18)),
+                          child: const Row(children: [SizedBox(width: 10), Icon(Icons.search, color: Colors.white, size: 18), Text(" 搜索服务/产品", style: TextStyle(color: Colors.white70))]),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      const Icon(Icons.headset_mic_outlined, color: Colors.white),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  bottom: -15, left: 15, right: 15,
+                  child: Container(
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFFFDEFD5), Color(0xFFF7D9A0)]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(child: Text("任务中心 · 抽最高20元立减金", style: TextStyle(color: Color(0xFF7B4B1B), fontWeight: FontWeight.bold))),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 35),
+            _buildActionRow(),
+            _buildHomeGrid(context),
+            _buildRedBanner(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: const [
+        _GridIcon(Icons.description_outlined, "明细", Colors.orange),
+        _GridIcon(Icons.swap_horiz, "转账", Colors.red),
+        _GridIcon(Icons.account_balance_wallet_outlined, "账户", Colors.blue),
+        _GridIcon(Icons.credit_card_outlined, "卡管理", Colors.purple),
+      ],
+    );
+  }
+
+  Widget _buildHomeGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 5, padding: const EdgeInsets.symmetric(vertical: 20),
+      children: [
+        InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DepositHallPage())), child: const _GridIcon(Icons.savings_outlined, "存款", Colors.blueGrey)),
+        const _GridIcon(Icons.monetization_on_outlined, "贷款", Colors.blueGrey),
+        const _GridIcon(Icons.phone_android, "充值", Colors.blueGrey),
+        const _GridIcon(Icons.water_drop_outlined, "生活缴费", Colors.blueGrey),
+        const _GridIcon(Icons.grid_view, "全部", Colors.blueGrey),
+      ],
+    );
+  }
+
+  Widget _buildRedBanner() => Container(margin: const EdgeInsets.all(15), height: 80, decoration: BoxDecoration(color: const Color(0xFFD32F2F), borderRadius: BorderRadius.circular(12)), child: const Center(child: Text("支付惠民 · 乐购陇原", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))));
+}
+
+// --- 4. 信用卡 (图 1000030839) ---
+class CreditCardPage extends StatelessWidget {
+  const CreditCardPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("信用卡")),
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.all(15), padding: const EdgeInsets.symmetric(vertical: 30),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+            child: Center(
+              child: Column(
+                children: [
+                  const Text("登录后可查看信用卡", style: TextStyle(color: Colors.grey)),
+                  const SizedBox(height: 15),
+                  ElevatedButton(onPressed: () {}, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD32F2F)), child: const Text("去登录", style: TextStyle(color: Colors.white))),
+                ],
+              ),
+            ),
+          ),
+          GridView.count(
+            shrinkWrap: true, crossAxisCount: 4,
+            children: const [_GridIcon(Icons.money, "借现金", Colors.orange), _GridIcon(Icons.speed, "额度管理", Colors.blue), _GridIcon(Icons.search, "账单查询", Colors.green), _GridIcon(Icons.grid_view, "全部", Colors.grey)],
+          )
+        ],
+      ),
+    );
+  }
+}
+
+// --- 5. 财富 (图 1000030843 基础页) ---
+class WealthPage extends StatelessWidget {
+  const WealthPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("财富")),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(25), color: Colors.white, width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text("总资产(元)", style: TextStyle(color: Colors.grey)),
+                  SizedBox(height: 10),
+                  _BalanceDisplay(fontSize: 30),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              color: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  const _GridIcon(Icons.auto_graph, "理财", Colors.red),
+                  InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const DepositHallPage())), child: const _GridIcon(Icons.savings_outlined, "存款", Colors.orange)),
+                  const _GridIcon(Icons.pie_chart_outline, "基金", Colors.red),
+                  const _GridIcon(Icons.security, "保险", Colors.red),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- 6. 存款大厅 (第一张图 1000030843) ---
+class DepositHallPage extends StatelessWidget {
+  const DepositHallPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("存款")),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white, padding: const EdgeInsets.symmetric(vertical: 20),
+              child: GridView.count(
+                shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 4, mainAxisSpacing: 20,
+                children: [
+                  const _GridIcon(Icons.wallet, "整存整取", Colors.blueAccent),
+                  const _GridIcon(Icons.savings_outlined, "通知存款", Colors.blueAccent),
+                  const _GridIcon(Icons.receipt, "零存整取", Colors.blueAccent),
+                  const _GridIcon(Icons.diamond, "幸福银", Colors.blueAccent),
+                  InkWell(onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const CDListPage())), child: const _GridIcon(Icons.card_membership, "大额存单", Colors.orange)),
+                  const _GridIcon(Icons.people_outline, "专属客群", Colors.blueAccent),
+                  const _GridIcon(Icons.timer_outlined, "幸福周享", Colors.blueAccent),
+                  const _GridIcon(Icons.calendar_month, "幸福季享", Colors.blueAccent),
+                ],
+              ),
+            ),
+            _buildPromoCard(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPromoCard(context) => InkWell(
+    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const CDListPage())),
+    child: Container(
+      margin: const EdgeInsets.all(15), padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB)]), borderRadius: BorderRadius.circular(15)),
+      child: Column(children: const [Text("2025年个人大额存单", style: TextStyle(fontWeight: FontWeight.bold)), SizedBox(height: 10), Text("1.20% - 1.75%", style: TextStyle(color: Colors.red, fontSize: 32, fontWeight: FontWeight.bold)), Text("年利率区间", style: TextStyle(color: Colors.grey, fontSize: 12))]),
+    ),
+  );
+}
+
+// --- 7. 大额存单列表 (第二张图 1000030844) ---
+class CDListPage extends StatelessWidget {
+  const CDListPage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final list = [
+      {"t": "26年第6期1个月个人大额存单", "r": "1.20%", "d": "200000.00元起存 | 1个月"},
+      {"t": "26年第6期2年个人大额存单", "r": "1.60%", "d": "200000.00元起存 | 2年"},
+      {"t": "26年第6期1年个人大额存单", "r": "1.50%", "d": "200000.00元起存 | 1年"},
+    ];
+    return Scaffold(
+      appBar: AppBar(title: const Text("大额存单")),
+      body: ListView.separated(
+        itemCount: list.length,
+        separatorBuilder: (c, i) => const Divider(height: 1),
+        itemBuilder: (c, i) => InkWell(
+          onTap: () => _handleDeposit(context, list[i]['t']!),
+          child: Container(
+            padding: const EdgeInsets.all(20), color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(list[i]['t']!, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 15),
+                Row(children: [
+                  Column(children: [Text(list[i]['r']!, style: const TextStyle(color: Colors.red, fontSize: 28, fontWeight: FontWeight.w900)), const Text("年化利率", style: TextStyle(color: Colors.grey, fontSize: 10))]),
+                  const SizedBox(width: 30),
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(list[i]['d']!, style: const TextStyle(fontSize: 13)), const Text("发行期：2026-02-09 至 2026-02-14", style: TextStyle(color: Colors.grey, fontSize: 11))])
+                ])
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleDeposit(context, String title) {
+    showDialog(context: context, builder: (ctx) => AlertDialog(
+      title: const Text("存款确认"),
+      content: Text("确定要存入 $title 吗？"),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("取消")), ElevatedButton(onPressed: () { BankState.add(200000); Navigator.pop(ctx); Navigator.pop(context); Navigator.pop(context); }, child: const Text("确认存入"))],
+    ));
+  }
+}
+
+// --- 8. 生活 (图 1000030838) ---
+class LifePage extends StatelessWidget {
+  const LifePage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("生活")),
+      body: ListView(
+        children: [
+          Container(margin: const EdgeInsets.all(15), height: 100, decoration: BoxDecoration(color: Colors.blue.shade100, borderRadius: BorderRadius.circular(10))),
+          GridView.count(
+            shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 4, children: const [_GridIcon(Icons.phone_android, "充值", Colors.blue), _GridIcon(Icons.water_drop, "水费", Colors.lightBlue), _GridIcon(Icons.bolt, "电费", Colors.amber), _GridIcon(Icons.school, "缴费", Colors.orange)],
+          ),
+          const Padding(padding: EdgeInsets.all(15), child: Text("车享生活", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+          Row(children: [Expanded(child: _buildSmallBox("ETC充值")), Expanded(child: _buildSmallBox("交通罚款"))])
+        ],
+      ),
+    );
+  }
+  Widget _buildSmallBox(String t) => Container(height: 60, margin: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: Center(child: Text(t)));
+}
+
+// --- 9. 我的 (图 1000030842) ---
+class MinePage extends StatelessWidget {
+  const MinePage({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.only(top: 60, left: 15, right: 15, bottom: 25),
+              decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFE3F2FD), Color(0xFFF7F9FC)], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+              child: Row(
+                children: [
+                  const CircleAvatar(radius: 28, backgroundColor: Colors.white, child: Icon(Icons.person, color: Colors.grey)),
+                  const SizedBox(width: 12),
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [const Text("夏翌", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1), decoration: BoxDecoration(color: Colors.orange, borderRadius: BorderRadius.circular(10)), child: const Text("M1会员", style: TextStyle(color: Colors.white, fontSize: 10)))]),
+                    const Text("上次登录: 2026-02-14", style: TextStyle(color: Colors.grey, fontSize: 11)),
+                  ]),
+                  const Spacer(),
+                  Container(padding: const EdgeInsets.all(4), decoration: BoxDecoration(border: Border.all(color: Colors.red), borderRadius: BorderRadius.circular(8)), child: const Text("版本切换", style: TextStyle(color: Colors.red, fontSize: 10))),
+                ],
+              ),
+            ),
+            Container(margin: const EdgeInsets.all(15), padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text("我的资产", style: TextStyle(color: Colors.grey)), SizedBox(height: 8), _BalanceDisplay(fontSize: 24)])),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- 通用复用组件 ---
+class _GridIcon extends StatelessWidget {
+  final IconData icon; final String label; final Color color;
+  const _GridIcon(this.icon, this.label, this.color);
+  @override
+  Widget build(BuildContext context) => Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: color, size: 28), const SizedBox(height: 8), Text(label, style: const TextStyle(fontSize: 11))]);
+}
+
+class _BalanceDisplay extends StatelessWidget {
+  final double fontSize;
+  const _BalanceDisplay({required this.fontSize});
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: BankState.isVisible,
+      builder: (c, visible, _) => ValueListenableBuilder<double>(
+        valueListenable: BankState.balance,
+        builder: (c, val, _) => Row(children: [
+          Text(visible ? val.toStringAsFixed(2) : "****", style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 10),
+          IconButton(onPressed: BankState.toggle, icon: Icon(visible ? Icons.visibility : Icons.visibility_off, size: 20, color: Colors.grey))
+        ]),
+      ),
+    );
+  }
+}
